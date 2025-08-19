@@ -16,24 +16,24 @@ function MapPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Çalışma Alanları Haritası</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6 text-white">Çalışma Alanları Haritası</h1>
       <div className="mb-4 flex">
         <input
           type="text"
           placeholder="Konum ara..."
-          className="flex-1 p-2 border rounded-l"
+          className="flex-1 p-2 border border-gray-600 rounded-l bg-gray-800 text-white placeholder-gray-400"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
         <button
           onClick={handleSearch}
-          className="bg-blue-500 text-white px-4 py-2 rounded-r"
+          className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700"
         >
           Ara
         </button>
       </div>
-      <div className="h-[600px] rounded-lg overflow-hidden">
+      <div className="h-[600px] rounded-lg overflow-hidden border border-gray-700">
         <MapContainer
           center={[39.9334, 32.8597]}
           zoom={13}
