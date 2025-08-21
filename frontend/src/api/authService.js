@@ -61,3 +61,53 @@ export const getUserProfile = async (userId, token) => {
   );
   return response.data;
 };
+
+/**
+ * Kullanıcı şifresini değiştirir
+ * @param {Object} passwordData - Şifre değiştirme bilgileri
+ * @returns {Promise} API yanıtı
+ */
+export const changePassword = async (passwordData) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.token) {
+    throw new Error('Kullanıcı girişi yapılmamış');
+  }
+
+  const response = await axios.put(
+    `${API_BASE_URL}/users/change-password`,
+    passwordData,
+    {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+/**
+ * Kullanıcı hesabını siler
+ * @param {string} password - Kullanıcının şifresi
+ * @returns {Promise} API yanıtı
+ */
+export const deleteAccount = async (password) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.token) {
+    throw new Error('Kullanıcı girişi yapılmamış');
+  }
+
+  const response = await axios.delete(
+    `${API_BASE_URL}/users/delete-account`,
+    {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+      data: { password }
+    }
+  );
+  
+  // Hesap silindikten sonra localStorage'ı temizle
+  localStorage.removeItem('user');
+  
+  return response.data;
+};

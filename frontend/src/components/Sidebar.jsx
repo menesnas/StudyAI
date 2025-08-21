@@ -66,7 +66,7 @@ function Sidebar() {
 
   const menuItems = [
     { path: '/home', label: 'Ana Sayfa', icon: HomeIcon },
-    { path: '/ai', label: 'Yol Haritan', icon: AIIcon },
+    { path: '/ai', label: 'AI ile Çalış', icon: AIIcon },
     { path: '/tasks', label: 'Görevler', icon: TaskIcon },
     { path: '/map', label: 'Harita', icon: MapIcon },
   ];
@@ -74,24 +74,29 @@ function Sidebar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="h-screen bg-gray-900 text-white flex flex-col">
+    <div className="h-full w-64 text-white flex flex-col border-r border-gray-700">
         {/* Logo/Brand */}
-        <div className="p-4 border-b border-gray-700">
-          <h1 className="text-xl font-bold text-white">StudyAI</h1>
+        <div className="border-b border-gray-700 bg-gray-900">
+          <Link
+            to="/home"
+            className="block py-4 px-4 text-xl font-bold text-white hover:bg-gray-700 transition-colors duration-200"
+          >
+            StudyAI
+          </Link>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        <nav className="flex-1 py-3 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                className={`flex items-center px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                   isActive(item.path)
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-gray-700 text-white border-l-4 border-blue-500'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white hover:border-l-4 hover:border-blue-500'
                 }`}
               >
                 <Icon />
@@ -102,14 +107,14 @@ function Sidebar() {
         </nav>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-700 p-4 space-y-2">
+        <div className="border-t border-gray-700 py-3 space-y-1">
           {/* Notifications */}
           <Link
             to="/notifications"
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+            className={`flex items-center px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               isActive('/notifications')
-                ? 'bg-gray-700 text-white'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                ? 'bg-gray-700 text-white border-l-4 border-blue-500'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white hover:border-l-4 hover:border-blue-500'
             }`}
           >
             <BellIcon />
@@ -120,7 +125,7 @@ function Sidebar() {
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+              className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
             >
               <UserIcon />
               <span className="ml-3">{user?.username || 'Kullanıcı'}</span>
@@ -131,7 +136,7 @@ function Sidebar() {
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-gray-800 rounded-md shadow-lg border border-gray-600">
                 <Link
                   to="/profile"
-                  className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                  className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
                   onClick={() => setShowProfileMenu(false)}
                 >
                   <UserIcon />
@@ -139,7 +144,7 @@ function Sidebar() {
                 </Link>
                 <Link
                   to="/settings"
-                  className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                  className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
                   onClick={() => setShowProfileMenu(false)}
                 >
                   <SettingsIcon />
@@ -147,7 +152,7 @@ function Sidebar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
                 >
                   <LogoutIcon />
                   <span className="ml-3">Çıkış Yap</span>

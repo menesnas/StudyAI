@@ -4,7 +4,7 @@ import { GlobeIcon, ChevronDownIcon, PaperClipIcon, AtIcon, SendIcon } from './I
 const AIChat = () => {
   return (
     <div className="mb-10">
-      <h1 className="text-xl font-bold text-white mb-6 text-center">
+      <h1 className="text-xl font-bold text-white mb-6 text-center mt-20">
         Öğrenme yolculuğuna devam etmeye hazır mısın?
       </h1>
       

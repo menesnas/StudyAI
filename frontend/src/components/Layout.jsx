@@ -3,18 +3,20 @@ import Sidebar from './Sidebar';
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-gray-900 flex">
-      {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
+    <div className="flex h-screen w-screen overflow-hidden">
+      {/* Sidebar - Ekranın sol kenarına tam bitişik */}
+      <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-gray-900 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <Outlet />
+      {/* Main Content - Sidebar'ın yanında */}
+      <div className="flex-1 ml-64 bg-gray-900 overflow-hidden">
+        <div className="h-full overflow-y-auto flex justify-center">
+          <div className="w-full max-w-5xl px-6">
+            <Outlet />
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
