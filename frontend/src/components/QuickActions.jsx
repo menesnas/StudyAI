@@ -21,11 +21,11 @@ const QuickActions = () => {
       description: 'Yakındaki mekanlar'
     },
     {
-      to: '/ai',
+      to: '/plans',
       icon: AIIcon,
       iconColor: 'text-blue-400',
       iconSize: 'w-5 h-5',
-      title: 'AI ile Çalış',
+      title: 'Planlar',
       description: 'Yapay zeka desteği'
     },
     {

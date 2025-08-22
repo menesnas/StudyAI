@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/database');
+const aiRoutes = require('./routes/ai.routes');
+
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +29,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use("/api/ai", aiRoutes);  // AI chat için yeni route
 
 // Health check route
 app.get('/health', (req, res) => {

@@ -66,9 +66,9 @@ function Sidebar() {
 
   const menuItems = [
     { path: '/home', label: 'Ana Sayfa', icon: HomeIcon },
-    { path: '/ai', label: 'AI ile Çalış', icon: AIIcon },
+    { path: '/plans', label: 'Planlar', icon: AIIcon },
     { path: '/tasks', label: 'Görevler', icon: TaskIcon },
-    { path: '/map', label: 'Harita', icon: MapIcon },
+    { path: '/map', label: 'Çalışma Alanları', icon: MapIcon },
   ];
 
   const isActive = (path) => location.pathname === path;

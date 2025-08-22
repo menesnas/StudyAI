@@ -7,7 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import TasksPage from './pages/TasksPage';
 import MapPage from './pages/MapPage';
-import AIPage from './pages/AIPage';
+import PlansPage from './pages/PlansPage'; // Yeni import
 import NotificationsPage from './pages/NotificationsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
@@ -27,7 +27,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/home" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/ai" element={user ? <AIPage /> : <Navigate to="/login" />} />
+          <Route path="/plans" element={user ? <PlansPage /> : <Navigate to="/login" />} /> {/* Yeni route */}
           <Route path="/tasks" element={user ? <TasksPage /> : <Navigate to="/login" />} />
           <Route path="/map" element={user ? <MapPage /> : <Navigate to="/login" />} />
           <Route path="/notifications" element={user ? <NotificationsPage /> : <Navigate to="/login" />} />

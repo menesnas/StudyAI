@@ -1,12 +1,103 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { GlobeIcon, ChevronDownIcon, PaperClipIcon, AtIcon, SendIcon } from './Icons';
+import { sendToAI } from '../api/ai';
 
 const AIChat = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const textareaRef = useRef(null);
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '60px';
+      textareaRef.current.rows = 3;
+    }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+    
+    const newMessages = [...messages, { role: "user", content: input }];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+    
+    // Input alanını küçült
+    resetTextareaHeight();
+    
+    try {
+      const aiResponse = await sendToAI(newMessages);
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin." 
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 240);
+    textarea.style.height = newHeight + 'px';
+  };
+
   return (
     <div className="mb-10">
       <h1 className="text-xl font-bold text-white mb-6 text-center mt-20">
         Öğrenme yolculuğuna devam etmeye hazır mısın?
       </h1>
+      
+      {/* Chat Messages */}
+      {messages.length > 0 && (
+        <div className="max-w-4xl mx-auto mb-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 max-h-96 overflow-y-auto">
+            {messages.map((message, index) => (
+              <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+                <div className={`inline-block max-w-[80%] p-3 rounded-lg ${
+                  message.role === 'user' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-100'
+                }`}>
+                  <div className="text-xs opacity-70 mb-1">
+                    {message.role === 'user' ? 'Sen' : 'StudyAI'}
+                  </div>
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="text-left mb-4">
+                <div className="inline-block bg-gray-700 text-gray-100 p-3 rounded-lg">
+                  <div className="text-xs opacity-70 mb-1">StudyAI</div>
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-pulse">Yazıyor</div>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Chat Input Container */}
       <div className="max-w-4xl mx-auto">
@@ -16,10 +107,15 @@ const AIChat = () => {
             <div className="flex-1">
               <div className="min-h-[60px] max-h-[240px] overflow-y-auto">
                 <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
                   placeholder="StudyAI'a sor veya workspace'inizden bir şey bulun..."
-                  className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-base leading-relaxed"
+                  className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-base leading-relaxed transition-all duration-200"
                   rows="3"
-                  style={{ minHeight: '60px' }}
+                  style={{ minHeight: '60px', height: '60px' }}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -38,53 +134,20 @@ const AIChat = () => {
                   <ChevronDownIcon className="ml-1" />
                 </button>
               </div>
-              
-              <button className="text-gray-400 hover:text-white transition-colors text-sm px-2 py-1">
-                Research
-              </button>
-              <button className="text-gray-400 hover:text-white transition-colors text-sm px-2 py-1">
-                Build
-              </button>
             </div>
             
             {/* Right Side Controls */}
-            <div className="flex items-center space-x-2">
-              {/* Web Sources */}
-              <button className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors text-sm px-2 py-1 rounded-md hover:bg-gray-700">
-                <GlobeIcon />
-                <span>Web</span>
-                <ChevronDownIcon />
-              </button>
-              
-              {/* Attach File */}
-              <button className="text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-700">
-                <PaperClipIcon />
-              </button>
-              
-              {/* Mention */}
-              <button className="text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-700">
-                <AtIcon />
-              </button>
-              
+            <div className="flex items-center space-x-2">          
               {/* Send Button */}
-              <button className="bg-gray-600 hover:bg-gray-500 text-white p-2 rounded-full transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+              <button 
+                onClick={handleSend}
+                disabled={loading || !input.trim()}
+                className="bg-gray-600 hover:bg-gray-500 text-white p-2 rounded-full transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 <SendIcon />
               </button>
             </div>
           </div>
-        </div>
-        
-        {/* Quick Suggestions */}
-        <div className="flex flex-wrap gap-2 mt-4 justify-center">
-          <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-sm text-gray-300 hover:text-white transition-colors duration-200">
-            📚 Yeni öğrenme planı oluştur
-          </button>
-          <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-sm text-gray-300 hover:text-white transition-colors duration-200">
-            ✅ Bugünün görevlerini göster
-          </button>
-          <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full text-sm text-gray-300 hover:text-white transition-colors duration-200">
-            🎯 İlerleme durumumu analiz et
-          </button>
         </div>
       </div>
     </div>
