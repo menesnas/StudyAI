@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GlobeIcon, ChevronDownIcon, PaperClipIcon, AtIcon, SendIcon } from './Icons';
 import { sendToAI } from '../api/ai';
 
@@ -6,7 +6,16 @@ const AIChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const textareaRef = useRef(null);
+  const chatContainerRef = useRef(null);
+
+  // Chat scroll'unu en alta kaydır
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, streamingText]);
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
@@ -22,13 +31,23 @@ const AIChat = () => {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
+    setStreamingText("");
     
-    // Input alanını küçült
     resetTextareaHeight();
     
     try {
-      const aiResponse = await sendToAI(newMessages);
-      setMessages(prev => [...prev, aiResponse]);
+      let finalContent = "";
+      const aiResponse = await sendToAI(newMessages, (text) => {
+        setStreamingText(text);
+        finalContent = text;
+      });
+      
+      // Streaming tamamlandığında mesajları güncelle
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: finalContent || aiResponse.content 
+      }]);
+      setStreamingText("");
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: "assistant", 
@@ -49,7 +68,6 @@ const AIChat = () => {
   const handleInputChange = (e) => {
     setInput(e.target.value);
     
-    // Auto-resize textarea
     const textarea = e.target;
     textarea.style.height = 'auto';
     const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 240);
@@ -63,9 +81,12 @@ const AIChat = () => {
       </h1>
       
       {/* Chat Messages */}
-      {messages.length > 0 && (
+      {(messages.length > 0 || streamingText) && (
         <div className="max-w-4xl mx-auto mb-6">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 max-h-96 overflow-y-auto">
+          <div 
+            ref={chatContainerRef}
+            className="bg-gray-900 border border-gray-700 rounded-xl p-4 max-h-96 overflow-y-auto"
+          >
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <div className={`inline-block max-w-[80%] p-3 rounded-lg ${
@@ -80,7 +101,22 @@ const AIChat = () => {
                 </div>
               </div>
             ))}
-            {loading && (
+
+            {/* Streaming Text */}
+            {streamingText && (
+              <div className="text-left mb-4">
+                <div className="inline-block max-w-[80%] p-3 rounded-lg bg-gray-700 text-gray-100">
+                  <div className="text-xs opacity-70 mb-1">StudyAI</div>
+                  <div className="whitespace-pre-wrap">
+                    {streamingText}
+                    <span className="inline-block w-1 h-4 ml-1 bg-blue-500 animate-pulse"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Loading Indicator */}
+            {loading && !streamingText && (
               <div className="text-left mb-4">
                 <div className="inline-block bg-gray-700 text-gray-100 p-3 rounded-lg">
                   <div className="text-xs opacity-70 mb-1">StudyAI</div>

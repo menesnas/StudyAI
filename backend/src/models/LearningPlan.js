@@ -11,6 +11,14 @@ const LearningPlan = sequelize.define('LearningPlan', {
     type: DataTypes.UUID,
     allowNull: false
   },
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   subject: {
     type: DataTypes.STRING,
     allowNull: false
@@ -27,6 +35,11 @@ const LearningPlan = sequelize.define('LearningPlan', {
     type: DataTypes.ENUM('beginner', 'intermediate', 'advanced'),
     allowNull: false
   },
+  status: {
+    type: DataTypes.ENUM('active', 'completed', 'paused'),
+    defaultValue: 'active',
+    allowNull: false
+  },
   startDate: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -35,11 +48,10 @@ const LearningPlan = sequelize.define('LearningPlan', {
   endDate: {
     type: DataTypes.DATE,
     allowNull: true
-  },  
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
   }
+}, {
+  // Sequelize otomatik olarak createdAt ve updatedAt alanlarını ekler
+  timestamps: true
 });
 
 module.exports = LearningPlan;

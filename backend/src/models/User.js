@@ -41,10 +41,6 @@ const User = sequelize.define('User', {
     type: DataTypes.NUMERIC(11, 8),
     allowNull: true
   },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
 }, {
   hooks: {
     beforeCreate: async (user) => {

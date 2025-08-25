@@ -31,14 +31,13 @@ const Task = sequelize.define('Task', {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
   planId: {
     type: DataTypes.UUID,
     allowNull: false
   }
+}, {
+  // Sequelize otomatik olarak createdAt ve updatedAt alanlarını ekler
+  timestamps: true
 });
 
 module.exports = Task;

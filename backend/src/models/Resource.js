@@ -27,10 +27,9 @@ const Resource = sequelize.define('Resource', {
     type: DataTypes.UUID,
     allowNull: false
   },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
+}, {
+  // Sequelize otomatik olarak createdAt ve updatedAt alanlarını ekler
+  timestamps: true
 });
 
 module.exports = Resource;

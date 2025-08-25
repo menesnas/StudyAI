@@ -15,6 +15,7 @@ function RegisterForm() {
     password: '',
     firstName: '',
     lastName: '',
+    passwordRepeat: '',
   });
 
   const dispatch = useDispatch();
@@ -43,12 +44,16 @@ function RegisterForm() {
     dispatch(register(formData));
   };
 
+  // Form validasyonu - tüm alanlar dolu ve şifreler eşleşmeli
   const isFormValid = 
     formData.username && 
     formData.email && 
     formData.firstName && 
     formData.lastName && 
-    formData.password;
+    formData.password &&
+    formData.passwordRepeat &&
+    formData.password === formData.passwordRepeat &&
+    formData.password.length >= 6;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -135,11 +140,49 @@ function RegisterForm() {
             onChange={handleInputChange('password')}
             autoComplete="new-password"
           />
-          <p className="text-xs text-gray-400 mt-1">
-            Şifreniz en az 6 karakter olmalıdır.
-          </p>
+          {formData.password && formData.password.length < 6 ? (
+            <p className="text-xs text-red-400 mt-1">
+              Şifreniz en az 6 karakter olmalıdır.
+            </p>
+          ) : formData.password && formData.password.length >= 6 ? (
+            <p className="text-xs text-green-400 mt-1">
+              Şifre uzunluğu uygun.
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mt-1">
+              Şifreniz en az 6 karakter olmalıdır.
+            </p>
+          )}
         </div>
       </div>
+        {/* Şifre Tekrar */}
+        <div>
+          <label htmlFor="passwordRepeat" className="block text-sm font-medium text-gray-300 mb-2">
+            Şifre Tekrar
+          </label>
+          <AuthInput
+            id="passwordRepeat"
+            type="password"
+            placeholder="••••••••"
+            value={formData.passwordRepeat}
+            onChange={handleInputChange('passwordRepeat')}
+            autoComplete="new-password"
+          />
+          {formData.passwordRepeat && formData.password !== formData.passwordRepeat ? (
+            <p className="text-xs text-red-400 mt-1">
+              Şifreler eşleşmiyor.
+            </p>
+          ) : formData.passwordRepeat && formData.password === formData.passwordRepeat ? (
+            <p className="text-xs text-green-400 mt-1">
+              Şifreler eşleşiyor.
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mt-1">
+              Şifrenizi tekrar girin.
+            </p>
+          )}
+        </div>
+
 
       {/* Kayıt Butonu */}
       <AuthButton
