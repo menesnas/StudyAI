@@ -137,7 +137,7 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
           >
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-lg ${
+                <div className={`max-w-[80%] p-4 rounded-lg ${
                   message.role === 'user' 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-800 text-gray-100'
@@ -145,7 +145,7 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
                   <div className="text-xs opacity-70 mb-1 font-medium">
                     {message.role === 'user' ? 'Sen' : 'StudyAI'}
                   </div>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  <div className="whitespace-pre-wrap text-base leading-relaxed">
                     {message.content}
                   </div>
                 </div>
@@ -155,9 +155,9 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
             {/* Streaming Text */}
             {streamingText && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] p-3 rounded-lg bg-gray-800 text-gray-100">
+                <div className="max-w-[90%] p-4 rounded-lg bg-gray-800 text-gray-100">
                   <div className="text-xs opacity-70 mb-1 font-medium">StudyAI</div>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  <div className="whitespace-pre-wrap text-base leading-relaxed">
                     {streamingText}
                     <span className="inline-block w-1 h-4 ml-1 bg-blue-500 animate-pulse"></span>
                   </div>
@@ -168,7 +168,7 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
             {/* Loading Indicator */}
             {loading && !streamingText && (
               <div className="flex justify-start">
-                <div className="p-3 rounded-lg bg-gray-800 text-gray-100">
+                <div className="p-4 rounded-lg bg-gray-800 text-gray-100">
                   <div className="text-xs opacity-70 mb-1 font-medium">StudyAI</div>
                   <div className="flex items-center space-x-2">
                     <div className="animate-pulse text-sm">Yazıyor</div>
@@ -196,7 +196,7 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               placeholder="StudyAI'a sor veya workspace'inizden bir şey bulun..."
-              className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-sm leading-relaxed"
+              className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-base leading-relaxed"
               rows="3"
               style={{ minHeight: '60px', height: '60px' }}
               disabled={loading}

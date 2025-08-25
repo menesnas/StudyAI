@@ -12,6 +12,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import Layout from './components/Layout';
+import ResourcesPage from './pages/ResourcesPage';
 
 function App() {
   const { user } = useSelector((state) => state.auth);
@@ -29,6 +30,7 @@ function App() {
           <Route path="/home" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/plans" element={user ? <PlansPage /> : <Navigate to="/login" />} /> {/* Yeni route */}
           <Route path="/tasks" element={user ? <TasksPage /> : <Navigate to="/login" />} />
+          <Route path="/resources" element={user ? <ResourcesPage /> : <Navigate to="/login" />} />
           <Route path="/map" element={user ? <MapPage /> : <Navigate to="/login" />} />
           <Route path="/notifications" element={user ? <NotificationsPage /> : <Navigate to="/login" />} />
           <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" />} />

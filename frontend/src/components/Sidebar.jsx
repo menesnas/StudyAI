@@ -29,6 +29,12 @@ const MapIcon = () => (
   </svg>
 );
 
+const ResourcesIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M1.586 1.586a2 2 0 000 2.828l8.414 8.414a2 2 0 002.828 0l8.414-8.414a2 2 0 000-2.828l-2.828-2.828a2 2 0 00-2.828 0l-8.414 8.414a2 2 0 00-2.828 0L1.586 4.414a2 2 0 000 2.828l8.414 8.414a2 2 0 002.828 0l8.414-8.414a2 2 0 000-2.828l-2.828-2.828a2 2 0 00-2.828 0l-8.414 8.414a2 2 0 00-2.828 0L1.586 1.586z" clipRule="evenodd"/>
+  </svg>
+);
+
 const BellIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
     <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
@@ -86,28 +92,7 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
     navigate('/login');
   };
 
-  const handleDeleteSession = (sessionId, e) => {
-    e.stopPropagation();
-    if (window.confirm('Bu sohbeti silmek istediğinizden emin misiniz?')) {
-      console.log('Silinen session ID:', sessionId);
-      console.log('Silme öncesi sessions:', chatHistoryService.getAllSessions());
-      
-      // Silme işlemini yap
-      chatHistoryService.deleteSession(sessionId);
-      
-      // Silme sonrası kontrol
-      console.log('Silme sonrası sessions:', chatHistoryService.getAllSessions());
-      console.log('localStorage kontrol:', localStorage.getItem('studyai_chat_history'));
-      
-      // State'i güncelle
-      loadChatSessions();
-      
-      // Eğer silinen session aktif session ise, yeni bir tane oluştur
-      if (sessionId === currentSessionId && onNewChat) {
-        onNewChat();
-      }
-    }
-  };
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -135,6 +120,7 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
     { path: '/home', label: 'Ana Sayfa', icon: HomeIcon },
     { path: '/plans', label: 'Planlar', icon: AIIcon },
     { path: '/tasks', label: 'Görevler', icon: TaskIcon },
+    { path: '/resources', label: 'Kaynaklar', icon: ResourcesIcon },
     { path: '/map', label: 'Çalışma Alanları', icon: MapIcon },
   ];
 

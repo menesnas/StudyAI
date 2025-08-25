@@ -34,7 +34,7 @@ function Dashboard() {
       </div>
       
       {/* Other Components */}
-      <div className="flex-shrink-0 p-6 pt-0 max-h-96 overflow-y-auto">
+      <div className="p-6 pt-0 max-h-96 overflow-y-auto">
         <LearningPlans plans={plans} loading={loading} />
         <QuickActions />
       </div>

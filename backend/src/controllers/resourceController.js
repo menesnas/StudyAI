@@ -1,5 +1,26 @@
 const { Resource, LearningPlan } = require('../models');
 
+// Kullanıcının tüm kaynaklarını getir
+exports.getAllResources = async (req, res) => {
+  try {
+    const resources = await Resource.findAll({
+      include: [{
+        model: LearningPlan,
+        as: 'plan',
+        where: { userId: req.user.id },
+        attributes: ['id', 'title']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(resources);
+  } catch (error) {
+    res.status(500).json({ 
+      error: error.message 
+    });
+  }
+};
+
 // Yeni kaynak oluştur
 exports.createResource = async (req, res) => {
   try {
