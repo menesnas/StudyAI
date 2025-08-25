@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GlobeIcon, ChevronDownIcon, PaperClipIcon, AtIcon, SendIcon } from './Icons';
 import { sendToAI } from '../api/ai';
+import { chatHistoryService } from '../services/chatHistoryService';
 
-const AIChat = () => {
+const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,29 @@ const AIChat = () => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, streamingText]);
+
+
+
+  // Messages değiştiğinde session'ı güncelle
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0) {
+      chatHistoryService.updateSession(currentSessionId, { messages });
+    }
+  }, [messages, currentSessionId]);
+
+
+
+  // Props'tan gelen session ID değiştiğinde mesajları yükle
+  useEffect(() => {
+    if (currentSessionId) {
+      const session = chatHistoryService.getSession(currentSessionId);
+      if (session) {
+        setMessages(session.messages || []);
+      }
+    } else {
+      setMessages([]);
+    }
+  }, [currentSessionId]);
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
@@ -32,7 +56,6 @@ const AIChat = () => {
     setInput("");
     setLoading(true);
     setStreamingText("");
-    
     resetTextareaHeight();
     
     try {
@@ -75,39 +98,66 @@ const AIChat = () => {
   };
 
   return (
-    <div className="mb-10">
-      <h1 className="text-xl font-bold text-white mb-6 text-center mt-20">
-        Öğrenme yolculuğuna devam etmeye hazır mısın?
-      </h1>
-      
-      {/* Chat Messages */}
-      {(messages.length > 0 || streamingText) && (
-        <div className="max-w-4xl mx-auto mb-6">
+    <div className="h-full flex flex-col bg-gray-900 rounded-xl border border-gray-700">
+      {/* Chat Header */}
+      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">StudyAI Chat</h2>
+        <button
+          onClick={() => {
+            if (window.confirm('Tüm sohbet geçmişini silmek istediğinizden emin misiniz?')) {
+              chatHistoryService.clearAllHistory();
+              setMessages([]);
+              setStreamingText("");
+              if (onNewChat) onNewChat();
+            }
+          }}
+          className="text-xs text-red-400 hover:text-red-300 border border-red-400 rounded px-2 py-1 ml-4 transition-colors"
+        >
+          Sohbet Geçmişini Sil
+        </button>
+      </div>
+
+      {/* Chat Messages Area */}
+      <div className="flex-1 min-h-0">
+        {messages.length === 0 && !streamingText ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-white mb-4">
+                Öğrenme yolculuğuna devam etmeye hazır mısın?
+              </h3>
+              <p className="text-gray-400">
+                Bir soru sor ve öğrenmeye başla!
+              </p>
+            </div>
+          </div>
+        ) : (
           <div 
             ref={chatContainerRef}
-            className="bg-gray-900 border border-gray-700 rounded-xl p-4 max-h-96 overflow-y-auto"
+            className="h-full overflow-y-auto p-4 space-y-4"
           >
             {messages.map((message, index) => (
-              <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                <div className={`inline-block max-w-[80%] p-3 rounded-lg ${
+              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-lg ${
                   message.role === 'user' 
                     ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-700 text-gray-100'
+                    : 'bg-gray-800 text-gray-100'
                 }`}>
-                  <div className="text-xs opacity-70 mb-1">
+                  <div className="text-xs opacity-70 mb-1 font-medium">
                     {message.role === 'user' ? 'Sen' : 'StudyAI'}
                   </div>
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {message.content}
+                  </div>
                 </div>
               </div>
             ))}
 
             {/* Streaming Text */}
             {streamingText && (
-              <div className="text-left mb-4">
-                <div className="inline-block max-w-[80%] p-3 rounded-lg bg-gray-700 text-gray-100">
-                  <div className="text-xs opacity-70 mb-1">StudyAI</div>
-                  <div className="whitespace-pre-wrap">
+              <div className="flex justify-start">
+                <div className="max-w-[80%] p-3 rounded-lg bg-gray-800 text-gray-100">
+                  <div className="text-xs opacity-70 mb-1 font-medium">StudyAI</div>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
                     {streamingText}
                     <span className="inline-block w-1 h-4 ml-1 bg-blue-500 animate-pulse"></span>
                   </div>
@@ -117,11 +167,11 @@ const AIChat = () => {
 
             {/* Loading Indicator */}
             {loading && !streamingText && (
-              <div className="text-left mb-4">
-                <div className="inline-block bg-gray-700 text-gray-100 p-3 rounded-lg">
-                  <div className="text-xs opacity-70 mb-1">StudyAI</div>
+              <div className="flex justify-start">
+                <div className="p-3 rounded-lg bg-gray-800 text-gray-100">
+                  <div className="text-xs opacity-70 mb-1 font-medium">StudyAI</div>
                   <div className="flex items-center space-x-2">
-                    <div className="animate-pulse">Yazıyor</div>
+                    <div className="animate-pulse text-sm">Yazıyor</div>
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -132,53 +182,44 @@ const AIChat = () => {
               </div>
             )}
           </div>
-        </div>
-      )}
-      
+        )}
+      </div>
+
       {/* Chat Input Container */}
-      <div className="max-w-4xl mx-auto">
-        <div className="relative bg-gray-800 border border-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200">
+      <div className="border-t border-gray-700 p-4">
+        <div className="relative bg-gray-800 border border-gray-600 rounded-lg">
           {/* Input Area */}
-          <div className="flex items-start p-4">
-            <div className="flex-1">
-              <div className="min-h-[60px] max-h-[240px] overflow-y-auto">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
-                  placeholder="StudyAI'a sor veya workspace'inizden bir şey bulun..."
-                  className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-base leading-relaxed transition-all duration-200"
-                  rows="3"
-                  style={{ minHeight: '60px', height: '60px' }}
-                  disabled={loading}
-                />
-              </div>
-            </div>
+          <div className="p-4">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              placeholder="StudyAI'a sor veya workspace'inizden bir şey bulun..."
+              className="w-full bg-transparent text-white placeholder-gray-400 resize-none border-0 outline-none text-sm leading-relaxed"
+              rows="3"
+              style={{ minHeight: '60px', height: '60px' }}
+              disabled={loading}
+            />
           </div>
           
           {/* Bottom Controls */}
-          <div className="flex items-center justify-between px-4 pb-3 pt-1">
+          <div className="flex items-center justify-between px-4 pb-3">
             {/* Left Side Controls */}
             <div className="flex items-center space-x-2">
-              {/* Mode Selector */}
               <div className="flex items-center bg-gray-700 rounded-lg p-1">
-                <button className="px-3 py-1 text-sm font-medium text-white bg-gray-600 rounded-md">
+                <button className="px-3 py-1 text-xs font-medium text-white bg-gray-600 rounded-md">
                   Ask
-                </button>
-                <button className="px-3 py-1 text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                  <ChevronDownIcon className="ml-1" />
                 </button>
               </div>
             </div>
             
             {/* Right Side Controls */}
             <div className="flex items-center space-x-2">          
-              {/* Send Button */}
               <button 
                 onClick={handleSend}
                 disabled={loading || !input.trim()}
-                className="bg-gray-600 hover:bg-gray-500 text-white p-2 rounded-full transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <SendIcon />
               </button>

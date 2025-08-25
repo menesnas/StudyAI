@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/features/auth/authSlice';
+import { chatHistoryService } from '../services/chatHistoryService';
 
 // Icons (using simple SVG icons)
 const HomeIcon = () => (
@@ -52,16 +53,82 @@ const LogoutIcon = () => (
   </svg>
 );
 
-function Sidebar() {
+function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [showChatHistory, setShowChatHistory] = useState(false);
+
+  // Chat sessions'ları yükle
+  useEffect(() => {
+    if (location.pathname === '/dashboard' || location.pathname === '/home') {
+      loadChatSessions();
+      setShowChatHistory(true);
+    } else {
+      setShowChatHistory(false);
+    }
+  }, [location.pathname]);
+
+  const loadChatSessions = () => {
+    try {
+      const sessions = chatHistoryService.getAllSessions();
+      setChatSessions(sessions);
+    } catch (error) {
+      console.error('Chat sessions yüklenemedi:', error);
+    }
+  };
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  const handleDeleteSession = (sessionId, e) => {
+    e.stopPropagation();
+    if (window.confirm('Bu sohbeti silmek istediğinizden emin misiniz?')) {
+      console.log('Silinen session ID:', sessionId);
+      console.log('Silme öncesi sessions:', chatHistoryService.getAllSessions());
+      
+      // Silme işlemini yap
+      chatHistoryService.deleteSession(sessionId);
+      
+      // Silme sonrası kontrol
+      console.log('Silme sonrası sessions:', chatHistoryService.getAllSessions());
+      console.log('localStorage kontrol:', localStorage.getItem('studyai_chat_history'));
+      
+      // State'i güncelle
+      loadChatSessions();
+      
+      // Eğer silinen session aktif session ise, yeni bir tane oluştur
+      if (sessionId === currentSessionId && onNewChat) {
+        onNewChat();
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString('tr-TR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } else if (diffInHours < 24 * 7) {
+      return date.toLocaleDateString('tr-TR', { 
+        weekday: 'short' 
+      });
+    } else {
+      return date.toLocaleDateString('tr-TR', { 
+        day: '2-digit', 
+        month: '2-digit' 
+      });
+    }
   };
 
   const menuItems = [
@@ -105,6 +172,50 @@ function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Chat History Section */}
+        {showChatHistory && (
+          <div className="border-t border-gray-700 flex-1 flex flex-col min-h-0">
+            <div className="p-4 border-b border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-300">Sohbet Geçmişi</h3>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-2">
+              {chatSessions.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm">
+                  <p>Henüz sohbet geçmişi yok</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {chatSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      onClick={() => onSessionSelect && onSessionSelect(session)}
+                      className={`
+                        group cursor-pointer p-2 rounded transition-colors duration-200 text-sm
+                        ${session.id === currentSessionId 
+                          ? 'bg-blue-600 text-white' 
+                          : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+                        }
+                      `}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium truncate text-xs">
+                            {session.title}
+                          </h4>
+                          <p className="text-xs opacity-70 mt-1">
+                            {session.messages.length} mesaj • {formatDate(session.updatedAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 py-3 space-y-1">
