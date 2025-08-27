@@ -3,12 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useOutletContext } from 'react-router-dom';
 import { getPlans } from '../redux/features/plans/plansSlice';
 import AIChat from '../components/AIChat';
-import LearningPlans from '../components/LearningPlans';
-import QuickActions from '../components/QuickActions';
 
 function Dashboard() {
   const dispatch = useDispatch();
-  const { plans, loading } = useSelector((state) => state.plans);
+  const { loading } = useSelector((state) => state.plans);
   const { user } = useSelector((state) => state.auth);
   const { dashboardSessionId, onSessionSelect, onNewChat } = useOutletContext();
 
@@ -31,12 +29,6 @@ function Dashboard() {
           onSessionSelect={onSessionSelect}
           onNewChat={onNewChat}
         />
-      </div>
-      
-      {/* Other Components */}
-      <div className="p-6 pt-0 max-h-96 overflow-y-auto">
-        <LearningPlans plans={plans} loading={loading} />
-        <QuickActions />
       </div>
     </div>
   );

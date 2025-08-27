@@ -11,6 +11,11 @@ const LearningPlan = sequelize.define('LearningPlan', {
     type: DataTypes.UUID,
     allowNull: false
   },
+  planId: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    allowNull: true
+  },
   title: {
     type: DataTypes.STRING,
     allowNull: false

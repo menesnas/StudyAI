@@ -19,7 +19,7 @@ export const getPlans = createAsyncThunk(
   }
 );
 
-// Yeni plan oluştur
+// Normal plan oluşturma
 export const createPlan = createAsyncThunk(
   'plans/createPlan',
   async (planData, { rejectWithValue }) => {
@@ -27,6 +27,31 @@ export const createPlan = createAsyncThunk(
       return await createNewPlan(planData);
     } catch (error) {
       return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+// AI ile plan oluşturma
+export const createAIPlan = createAsyncThunk(
+  'plans/createAIPlan',
+  async (message, thunkAPI) => {
+    try {
+      const response = await axios.post('/api/ai/ask', { message });
+      const { plans, tasks } = response.data;
+      
+      // Her plan için veritabanına kaydet
+      const savedPlans = await Promise.all(
+        plans.map(plan => axios.post('/api/plans', plan))
+      );
+      
+      // Her görev için veritabanına kaydet
+      const savedTasks = await Promise.all(
+        tasks.map(task => axios.post('/api/tasks', task))
+      );
+      
+      return { plans: savedPlans.data, tasks: savedTasks.data };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response.data);
     }
   }
 );
@@ -119,6 +144,23 @@ const plansSlice = createSlice({
       .addCase(createPlan.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.error || 'Plan oluşturulurken bir hata oluştu';
+        state.success = false;
+      })
+      
+      // createAIPlan
+      .addCase(createAIPlan.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(createAIPlan.fulfilled, (state, action) => {
+        state.loading = false;
+        state.plans.push(...action.payload.plans);
+        state.success = true;
+      })
+      .addCase(createAIPlan.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error || 'AI plan oluşturulurken bir hata oluştu';
         state.success = false;
       })
       

@@ -1,97 +1,108 @@
-const axios = require("axios");
+// aiService.js (Final ve Düzeltilmiş Versiyon)
 
-// Retry fonksiyonu
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const axios = require('axios');
+// Modelleri doğru yerden import ettiğinizden emin olun. Genellikle './models' veya './models/index' olur.
+const { LearningPlan } = require('../models');
 
-// Mevcut chat fonksiyonu (fetch ile)
-async function askAI(messages, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      console.log(`Deneme ${i + 1}/${retries}`);
-      console.log('Environment variables kontrol:');
-      console.log('API URL:', process.env.OPENROUTER_API_URL);
-      console.log('API Key var mı:', !!process.env.OPENROUTER_API_KEY);
-      console.log('Model:', process.env.OPENROUTER_MODEL);
-      
-      const resp = await fetch(process.env.OPENROUTER_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "HTTP-Referer": `${process.env.HTTP_REFERER}`,
-          "X-Title": "StudyAI"
-        },
-        body: JSON.stringify({
-          model: process.env.OPENROUTER_MODEL,
-          messages
-        })
-      });
-
-      console.log('OpenRouter yanıt status:', resp.status);
-
-      if (resp.status === 429 && i < retries - 1) {
-        console.log(`Rate limit, ${5 * (i + 1)} saniye bekleniyor...`);
-        await delay(5000 * (i + 1)); // Exponential backoff
-        continue;
-      }
-
-      if (!resp.ok) {
-        const errorText = await resp.text();
-        console.log('OpenRouter hata yanıtı:', errorText);
-        throw new Error(`OpenRouter API error: ${resp.status} ${resp.statusText}`);
-      }
-
-      const data = await resp.json();
-      console.log('OpenRouter başarılı yanıt:', data);
-      
-      if (!data?.choices?.[0]?.message?.content) {
-        throw new Error('OpenRouter API yanıtında içerik bulunamadı');
-      }
-      
-      return data.choices[0].message.content;
-    } catch (error) {
-      console.error(`Deneme ${i + 1} başarısız:`, error.message);
-      
-      if (i === retries - 1) {
-        console.error('Tüm denemeler başarısız oldu');
-        throw error;
-      }
-    }
+/**
+ * Yapay zeka modelini çağırır ve bir JSON string'i döndürür.
+ * Bu fonksiyonun adı 'callOpenRouter' ve bu isim tutarlı olarak kullanılacak.
+ */
+async function callOpenRouter(messages = []) {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) {
+    // Bu hata sunucu tarafında loglanacak ve 500 hatası olarak dönecektir.
+    console.error('OPENROUTER_API_KEY bulunamadı.');
+    throw new Error('AI servis konfigürasyonu eksik.');
   }
-}
 
-// Plan ve görev üretimi için özel fonksiyon (axios ile)
-async function getAIResponse(message) {
+  const model = process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo';
+
+  const systemPrompt = {
+    role: 'system',
+    content: `You are a helpful assistant that generates learning plans.
+      Your response MUST be a JSON object and nothing else. Do not include any text, explanation, or markdown formatting before or after the JSON.
+      The JSON object must have these exact keys: "title", "description", "subject", "targetDuration" (number of days), "dailyStudyTime" (number of minutes), and "knowledgeLevel" (one of 'beginner', 'intermediate', 'advanced').
+      Example: {"title": "Intro to Python", "description": "A 10-day plan for absolute beginners.", "subject": "Python", "targetDuration": 10, "dailyStudyTime": 45, "knowledgeLevel": "beginner"}`
+  };
+
+  const payload = {
+    model,
+    messages: [systemPrompt, ...messages],
+    temperature: 0.2,
+    max_tokens: 1500,
+    response_format: { type: "json_object" } // Modeli JSON üretmeye zorla
+  };
+
   try {
-    const response = await axios.post(
-      process.env.OPENROUTER_API_URL,
-      {
-        model: process.env.OPENROUTER_MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Kullanıcının mesajına göre öğrenme planı ve görevler üret. Sadece şu formatta JSON dön: {plans:[...], tasks:[...]}"
-          },
-          { role: "user", content: message },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+    const resp = await axios.post(process.env.OPENROUTER_API_URL, payload, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
-    const aiText = response.data.choices[0].message.content;
+    if (!resp.data || !resp.data.choices || !resp.data.choices[0]) {
+      throw new Error('Yapay zeka servisinden geçersiz yanıt alındı.');
+    }
 
-    return JSON.parse(aiText);
-  } catch (err) {
-    console.error("AI Service Error:", err.response?.data || err.message);
-    throw err;
+    // Doğrudan JSON string'ini döndür.
+    return resp.data.choices[0].message.content;
+
+  } catch (error) {
+    console.error("callOpenRouter - Axios isteği başarısız:", error.response ? error.response.data : error.message);
+    // Hata detayını koruyarak yeni bir hata fırlat.
+    const e = new Error('Yapay zeka servisine ulaşılamadı.');
+    e.status = error.response?.status || 500;
+    throw e;
   }
 }
 
-module.exports = { askAI, getAIResponse };
-  
+/**
+ * Gelen JSON string'ini ayrıştırır ve veritabanına kaydeder.
+ */
+async function parseAndSave(aiContent, user) {
+  let parsedData;
+
+  if (typeof aiContent !== 'string' || aiContent.trim() === '') {
+      console.warn("Kaydedilecek geçerli bir AI içeriği yok.");
+      return; // Boş içerikse işlemi durdur.
+  }
+
+  try {
+    parsedData = JSON.parse(aiContent);
+  } catch (error) {
+    console.error('DATABASE_SAVE_ERROR: AI içeriği JSON formatında değil.', aiContent);
+    // Bu hatayı yukarıya fırlatabiliriz ama şimdilik sadece loglamak yeterli.
+    // Çünkü ana amaç kullanıcının cevabı görmesi.
+    return;
+  }
+
+  // Veritabanına kaydedilecek veriyi hazırla.
+  const planData = {
+    title: parsedData.title || 'Başlıksız Plan',
+    description: parsedData.description || null,
+    subject: parsedData.subject || 'Genel',
+    targetDuration: Number(parsedData.targetDuration) || 7,
+    dailyStudyTime: Number(parsedData.dailyStudyTime) || 30,
+    knowledgeLevel: parsedData.knowledgeLevel || 'beginner',
+    status: 'active',
+    userId: user.id // Bu ID'nin varlığı controller'da kontrol edildi.
+  };
+
+  try {
+    await LearningPlan.create(planData);
+    console.log("Öğrenme planı başarıyla veritabanına kaydedildi:", planData.title);
+  } catch (dbError) {
+    console.error('DATABASE_SAVE_ERROR: Veritabanına kayıt sırasında hata oluştu.', dbError.message);
+    // Hatanın detayını logla
+    console.error('Kaydedilmeye çalışılan veri:', planData);
+  }
+}
+
+// --- EN ÖNEMLİ KISIM ---
+// Dışa aktardığımız objenin anahtarları, controller'da kullandığımız isimlerle aynı olmalı.
+module.exports = {
+  callOpenRouter,
+  parseAndSave
+};
