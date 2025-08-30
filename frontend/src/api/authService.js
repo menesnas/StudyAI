@@ -12,8 +12,16 @@ export const loginUser = async (userData) => {
     userData
   );
   
-  if (response.data) {
+  if (response.data && response.data.token) {
+    // Token'ı kontrol et
+    console.log('Received token:', response.data.token.substring(0, 10) + '...');
+    
+    // LocalStorage'a kaydet
     localStorage.setItem('user', JSON.stringify(response.data));
+    
+    // Doğrulama için tekrar oku
+    const stored = localStorage.getItem('user');
+    console.log('Stored user data:', stored ? 'exists' : 'missing');
   }
   
   return response.data;

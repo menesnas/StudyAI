@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { setSelectedPlan } from '../redux/features/plans/plansSlice';
+import { setSelectedPlan, deletePlan } from '../redux/features/plans/plansSlice';
 import { useNavigate } from 'react-router-dom';
 
 const LearningPlans = ({ plans, loading }) => {
@@ -10,6 +10,12 @@ const LearningPlans = ({ plans, loading }) => {
   const handlePlanClick = (plan) => {
     dispatch(setSelectedPlan(plan));
     navigate('/tasks'); // Görevler sayfasına yönlendir
+  };
+
+  const handleDelete = (e, planId) => {
+    e.stopPropagation(); // buton tıklaması karttaki click'i tetiklememeli
+    if (!window.confirm('Bu planı gerçekten silmek istiyor musunuz?')) return;
+    dispatch(deletePlan(planId));
   };
 
   if (loading) {
@@ -57,6 +63,14 @@ const LearningPlans = ({ plans, loading }) => {
                   style={{ width: `${plan.progress || 0}%` }}
                 ></div>
               </div>
+            </div>
+            <div className="flex justify-end mt-3">
+              <button
+                onClick={(e) => handleDelete(e, plan.id)}
+                className="text-sm text-red-400 hover:text-red-600 px-3 py-1 rounded"
+              >
+                Sil
+              </button>
             </div>
           </div>
         </div>

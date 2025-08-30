@@ -34,9 +34,9 @@ function Layout() {
   };
 
   return (
-    <div className="flex h-screen w-screen">
+    <div className="flex h-screen w-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       {/* Sidebar - Ekranın sol kenarına tam bitişik */}
-      <div className="fixed left-0 top-0 h-full z-10">
+      <div className="fixed left-0 top-0 h-full z-10 bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
         <Sidebar 
           currentSessionId={dashboardSessionId}
           onSessionSelect={handleSessionSelect}
@@ -45,7 +45,7 @@ function Layout() {
       </div>
 
       {/* Main Content - Sidebar'ın yanında */}
-      <div className="flex-1 min-h-[calc(100vh-12rem)] ml-64 bg-gray-900 overflow-y-auto">
+      <div className="flex-1 min-h-screen ml-64 bg-white dark:bg-gray-900 overflow-y-auto transition-colors duration-200">
         <div className="h-full flex justify-center py-4">
           <div className="w-full max-w-5xl px-6 min-h-full">
             <Outlet context={{ 

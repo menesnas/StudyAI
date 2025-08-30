@@ -15,15 +15,16 @@ const Task = sequelize.define('Task', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  due_date: {
-    type: DataTypes.DATE,
+  status: {
+    type: DataTypes.ENUM('active', 'completed', 'paused'),
+    defaultValue: 'active',
+    allowNull: false
+  },
+  day: {
+    type: DataTypes.INTEGER,
     allowNull: true
   },
-  status: {
-    type: DataTypes.ENUM('pending', 'completed', 'overdue'),
-    defaultValue: 'pending'
-  },
-  priority_level: {
+  priority: {
     type: DataTypes.ENUM('low', 'medium', 'high'),
     defaultValue: 'medium'
   },

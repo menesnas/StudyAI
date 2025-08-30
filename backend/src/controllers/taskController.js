@@ -4,7 +4,7 @@ const { Task, LearningPlan } = require('../models');
 exports.createTask = async (req, res) => {
   try {
     const { 
-      title, description, dueDate, estimatedTime, 
+      title, description, day, estimatedTime, 
       priority, planId 
     } = req.body;
 
@@ -27,7 +27,7 @@ exports.createTask = async (req, res) => {
     const task = await Task.create({
       title,
       description,
-      dueDate,
+      day,
       estimatedTime,
       priority,
       planId
@@ -64,7 +64,7 @@ exports.getPlanTasks = async (req, res) => {
 
     const tasks = await Task.findAll({
       where: { planId },
-      order: [['dueDate', 'ASC']]
+      order: [['day', 'ASC']]
     });
 
     res.json(tasks);
@@ -80,7 +80,7 @@ exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      title, description, dueDate, estimatedTime, 
+      title, description, day, estimatedTime, 
       priority, status 
     } = req.body;
 
@@ -106,7 +106,7 @@ exports.updateTask = async (req, res) => {
     // Görevi güncelle
     if (title) task.title = title;
     if (description) task.description = description;
-    if (dueDate) task.dueDate = dueDate;
+    if (day) task.day = day;
     if (estimatedTime) task.estimatedTime = estimatedTime;
     if (priority) task.priority = priority;
     if (status) task.status = status;

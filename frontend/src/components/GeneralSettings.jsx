@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 
 function GeneralSettings() {
-  const [darkMode, setDarkMode] = useState(true);
+  // Başlangıçta sistem tercihini al
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const [darkMode, setDarkMode] = useState(() => {
+    // localStorage'dan kayıtlı tercihi kontrol et, yoksa sistem tercihini kullan
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : prefersDark;
+  });
   const [notifications, setNotifications] = useState(true);
 
   const handleDarkModeChange = (e) => {
-    setDarkMode(e.target.checked);
-    // Burada tema değişikliği işlemleri yapılabilir
-    console.log('Karanlık tema:', e.target.checked ? 'Açık' : 'Kapalı');
+    const isDark = e.target.checked;
+    setDarkMode(isDark);
+    
+    // HTML class'ını güncelle
+    document.documentElement.classList.toggle('dark', isDark);
+    
+    // Tercihi localStorage'a kaydet
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   };
 
   const handleNotificationsChange = (e) => {
@@ -16,11 +27,11 @@ function GeneralSettings() {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-white mb-4">Genel Ayarlar</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg transition-colors duration-200">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Genel Ayarlar</h2>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="text-gray-300">Karanlık Tema</label>
+          <label className="text-gray-700 dark:text-gray-300">Karanlık Tema</label>
           <input 
             type="checkbox" 
             checked={darkMode}

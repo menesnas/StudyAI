@@ -24,7 +24,7 @@ function TasksPage() {
         {tasks.map((task) => (
           <div key={task.id} className="bg-gray-800 p-4 rounded-lg shadow border border-gray-700 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white">sdfgdsg {task.title}</h3>
+              <h3 className="font-semibold text-white">{task.title}</h3>
               <p className="text-gray-300">{task.description}</p>
               <div className="text-sm text-gray-400">
                 Bitiş: {new Date(task.dueDate).toLocaleDateString()}
@@ -50,7 +50,7 @@ function TasksPage() {
         ))}
         {tasks.length === 0 && (
           <div className="bg-gray-800 p-6 rounded-lg text-center">
-            <p className="text-gray-300">Henüz göreviniz bulunmuyor.</p>
+            <p className="text-gray-300">Görevler</p>
           </div>
         )}
       </div>

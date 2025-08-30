@@ -1,8 +1,13 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100%;
+  min-height: 100vh;
   text-align: center;
+  background-color: white;
+  transition: background-color 0.2s ease-in-out;
+}
+
+:root.dark #root {
+  background-color: #111827;
 }
 
 .logo {

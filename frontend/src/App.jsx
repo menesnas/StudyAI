@@ -16,6 +16,29 @@ import ResourcesPage from './pages/ResourcesPage';
 
 function App() {
   const { user } = useSelector((state) => state.auth);
+  
+  // Tema değişimini yönetmek için useEffect kullanıyoruz
+  React.useEffect(() => {
+    // localStorage'dan kayıtlı tercihi kontrol et
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme) {
+      // Kayıtlı tercih varsa onu kullan
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    } else {
+      // Kayıtlı tercih yoksa sistem tercihini kullan
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      document.documentElement.classList.toggle('dark', mediaQuery.matches);
+      
+      // Sistem teması değiştiğinde dinle (sadece kayıtlı tercih yoksa)
+      const handleChange = (e) => {
+        document.documentElement.classList.toggle('dark', e.matches);
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, []);
 
   return (
     <Router>

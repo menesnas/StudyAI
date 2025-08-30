@@ -148,9 +148,18 @@ exports.deletePlan = async (req, res) => {
       });
     }
 
+    // İlişkili görevleri ve kaynakları önce sil
+    try {
+      await Task.destroy({ where: { planId: id } });
+      await Resource.destroy({ where: { planId: id } });
+    } catch (innerErr) {
+      console.error('Error removing associated tasks/resources:', innerErr);
+      // devam edip planı silmeye çalışacağız
+    }
+
     await plan.destroy();
 
-    res.json({ message: 'Plan başarıyla silindi' });
+    res.json({ message: 'Plan ve ilişkili öğeler başarıyla silindi' });
   } catch (error) {
     res.status(500).json({ 
       error: error.message 
