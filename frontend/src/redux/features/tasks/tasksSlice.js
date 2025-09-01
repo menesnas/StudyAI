@@ -4,7 +4,8 @@ import {
   createNewTask, 
   updateTaskDetails, 
   removeTask, 
-  markTaskAsCompleted 
+  markTaskAsCompleted,
+  getTaskResources
 } from '../../../api/taskService';
 
 // Plana ait görevleri getir
@@ -67,11 +68,25 @@ export const completeTask = createAsyncThunk(
   }
 );
 
+// Görev kaynaklarını getir
+export const getTaskResourcesThunk = createAsyncThunk(
+  'tasks/getTaskResources',
+  async (taskId, { rejectWithValue }) => {
+    try {
+      return await getTaskResources(taskId);
+    } catch (error) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
 const initialState = {
   tasks: [],
   loading: false,
   error: null,
   success: false,
+  currentTaskResources: null,
+  selectedTaskWithResources: null,
 };
 
 const tasksSlice = createSlice({
@@ -83,6 +98,12 @@ const tasksSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    clearTaskResources: (state) => {
+      state.currentTaskResources = null;
+    },
+    setSelectedTaskWithResources: (state, action) => {
+      state.selectedTaskWithResources = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -168,9 +189,25 @@ const tasksSlice = createSlice({
       .addCase(completeTask.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.error || 'Görev tamamlanırken bir hata oluştu';
+      })
+      
+      // getTaskResources - görev kaynakları
+      .addCase(getTaskResourcesThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getTaskResourcesThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        // Kaynaklar state'e eklenir, ancak task nesnesinin içine değil
+        // Ayrı bir state alanında tutulur
+        state.currentTaskResources = action.payload;
+      })
+      .addCase(getTaskResourcesThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error || 'Görev kaynakları yüklenirken bir hata oluştu';
       });
   },
 });
 
-export const { resetSuccess, clearError } = tasksSlice.actions;
+export const { resetSuccess, clearError, clearTaskResources, setSelectedTaskWithResources } = tasksSlice.actions;
 export default tasksSlice.reducer;

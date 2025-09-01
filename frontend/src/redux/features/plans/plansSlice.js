@@ -109,9 +109,30 @@ const plansSlice = createSlice({
     },
     setSelectedPlan: (state, action) => {
       state.selectedPlan = action.payload;
+      // Seçilen planı localStorage'a kaydet
+      if (action.payload) {
+        localStorage.setItem('selectedPlan', JSON.stringify(action.payload));
+      } else {
+        localStorage.removeItem('selectedPlan');
+      }
     },
     clearError: (state) => {
       state.error = null;
+    },
+    clearSelectedPlan: (state) => {
+      state.selectedPlan = null;
+      localStorage.removeItem('selectedPlan');
+    },
+    loadSavedPlan: (state) => {
+      const savedPlan = localStorage.getItem('selectedPlan');
+      if (savedPlan) {
+        try {
+          state.selectedPlan = JSON.parse(savedPlan);
+        } catch (error) {
+          console.error('Kaydedilen plan yüklenemedi:', error);
+          localStorage.removeItem('selectedPlan');
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -220,5 +241,5 @@ const plansSlice = createSlice({
   },
 });
 
-export const { resetSuccess, setSelectedPlan, clearError } = plansSlice.actions;
+export const { resetSuccess, setSelectedPlan, clearError, clearSelectedPlan, loadSavedPlan } = plansSlice.actions;
 export default plansSlice.reducer;

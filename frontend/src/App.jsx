@@ -1,7 +1,8 @@
 import './App.css'
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { loadSavedPlan } from './redux/features/plans/plansSlice';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
@@ -16,6 +17,7 @@ import ResourcesPage from './pages/ResourcesPage';
 
 function App() {
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   
   // Tema değişimini yönetmek için useEffect kullanıyoruz
   React.useEffect(() => {
@@ -39,6 +41,13 @@ function App() {
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
   }, []);
+  
+  // Kaydedilmiş planı yükle
+  React.useEffect(() => {
+    if (user) {
+      dispatch(loadSavedPlan());
+    }
+  }, [dispatch, user]);
 
   return (
     <Router>

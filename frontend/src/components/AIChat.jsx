@@ -68,13 +68,18 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
       // Streaming tamamlandığında mesajları güncelle
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: finalContent || aiResponse.content 
+        content: aiResponse.answer || finalContent,
+        context: aiResponse.context // Web arama sonuçlarını sakla
       }]);
       setStreamingText("");
     } catch (error) {
+      let errorMessage = "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.";
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin." 
+        content: errorMessage
       }]);
     } finally {
       setLoading(false);
@@ -148,6 +153,20 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
                   <div className="whitespace-pre-wrap text-base leading-relaxed">
                     {message.content}
                   </div>
+                  {message.context && (
+                    <div className="mt-4 pt-4 border-t border-gray-700">
+                      <div className="text-xs font-medium text-gray-400 mb-2">
+                        Kaynaklar:
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {message.context.split('---').map((source, idx) => (
+                          <div key={idx} className="mb-2">
+                            {source.trim()}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

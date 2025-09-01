@@ -69,3 +69,16 @@ export const markTaskAsCompleted = async (taskId) => {
   );
   return response.data;
 };
+
+/**
+ * Görev için kaynak önerilerini getirir
+ * @param {string} taskId - Görev ID'si
+ * @returns {Promise} API yanıtı
+ */
+export const getTaskResources = async (taskId) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/tasks/${taskId}/resources`,
+    getRequestConfig()
+  );
+  return response.data;
+};

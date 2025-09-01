@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/features/auth/authSlice';
+import { setSelectedPlan } from '../redux/features/plans/plansSlice';
 import { chatHistoryService } from '../services/chatHistoryService';
 
 // Icons (using simple SVG icons)
@@ -64,6 +65,7 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { plans } = useSelector((state) => state.plans);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [chatSessions, setChatSessions] = useState([]);
   const [showChatHistory, setShowChatHistory] = useState(false);
@@ -116,12 +118,31 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
     }
   };
 
+  // Görev ve Kaynak sayfalarına geçiş için özel fonksiyonlar
+  const handleTasksClick = (e) => {
+    e.preventDefault();
+    if (!plans || plans.length === 0) {
+      navigate('/plans');
+    } else {
+      navigate('/tasks');
+    }
+  };
+
+  const handleResourcesClick = (e) => {
+    e.preventDefault();
+    if (!plans || plans.length === 0) {
+      navigate('/plans');
+    } else {
+      navigate('/resources');
+    }
+  };
+
   const menuItems = [
-    { path: '/home', label: 'Ana Sayfa', icon: HomeIcon },
-    { path: '/plans', label: 'Planlar', icon: AIIcon },
-    { path: '/tasks', label: 'Görevler', icon: TaskIcon },
-    { path: '/resources', label: 'Kaynaklar', icon: ResourcesIcon },
-    { path: '/map', label: 'Çalışma Alanları', icon: MapIcon },
+    { path: '/home', label: 'Ana Sayfa', icon: HomeIcon, onClick: null },
+    { path: '/plans', label: 'Planlar', icon: AIIcon, onClick: null },
+    { path: '/tasks', label: 'Görevler', icon: TaskIcon, onClick: handleTasksClick },
+    { path: '/resources', label: 'Kaynaklar', icon: ResourcesIcon, onClick: handleResourcesClick },
+    { path: '/map', label: 'Çalışma Alanları', icon: MapIcon, onClick: null },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -146,6 +167,7 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={item.onClick}
                 className={`flex items-center px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'bg-gray-700 text-white border-l-4 border-blue-500'

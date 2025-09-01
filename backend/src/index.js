@@ -12,20 +12,19 @@ app.use(express.json());
 const aiRoutes = require("./routes/ai.routes");
 const planRoutes = require("./routes/plan.routes");
 const taskRoutes = require("./routes/task.routes");
-// diğer route'lar...
 const nominatimRoutes = require('./routes/nominatim.routes');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const resourceRoutes = require('./routes/resource.routes');
-
+const searchRoutes = require("./routes/search.routes");
+app.use("/api/search", searchRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/tasks", taskRoutes);
-// diğer route'lar...
 app.use('/api/nominatim', nominatimRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/resources', resourceRoutes);
+app.use('/api/tasks/resources', resourceRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
