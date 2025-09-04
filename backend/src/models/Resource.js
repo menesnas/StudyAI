@@ -15,14 +15,6 @@ const Resource = sequelize.define('Resource', {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  type: {
-    type: DataTypes.ENUM('video', 'article', 'course', 'book', 'other'),
-    allowNull: false
-  },
-  difficulty_level: {
-    type: DataTypes.ENUM('beginner', 'intermediate', 'advanced'),
-    allowNull: false
-  },
   planId: {
     type: DataTypes.UUID,
     allowNull: false

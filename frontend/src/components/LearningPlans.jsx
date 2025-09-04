@@ -45,23 +45,31 @@ const LearningPlans = ({ plans, loading }) => {
         >
           <h3 className="text-xl font-semibold text-white mb-2">{plan.title}</h3>
           <p className="text-gray-400 mb-4">{plan.description}</p>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-blue-400">
-              Süre: {plan.duration}
-            </span>
-            <span className="px-3 py-1 rounded-full bg-blue-500 text-white">
-              {plan.category}
-            </span>
-          </div>
           <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="flex justify-between text-sm text-gray-400">
-              <span>Durum: {plan.status}</span>
-              {/* İlerleme çubuğu eklenebilir */}
-              <div className="w-24 bg-gray-600 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full" 
-                  style={{ width: `${plan.progress || 0}%` }}
-                ></div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Süre:</span>
+                <span className="text-blue-400 font-medium">
+                  {plan.duration || plan.targetDuration ? `${plan.duration || plan.targetDuration} gün` : 'Belirtilmedi'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Durum:</span>
+                <span className={`font-medium ${
+                  plan.status === 'active' ? 'text-green-400' : 
+                  plan.status === 'completed' ? 'text-blue-400' : 
+                  'text-yellow-400'
+                }`}>
+                  {plan.status === 'active' ? 'aktif' : 
+                   plan.status === 'completed' ? 'tamamlandı' : 
+                   'duraklatıldı'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Kategori:</span>
+                <span className="px-2 py-1 rounded-full bg-blue-500 text-white text-xs">
+                  {plan.category || 'Genel'}
+                </span>
               </div>
             </div>
             <div className="flex justify-end mt-3">

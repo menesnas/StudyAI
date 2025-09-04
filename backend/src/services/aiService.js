@@ -38,7 +38,10 @@ async function callOpenRouter(messages = []) {
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 60000, // 60 saniye timeout
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
     });
 
     if (!resp.data || !resp.data.choices || !resp.data.choices[0]) {
@@ -48,9 +51,29 @@ async function callOpenRouter(messages = []) {
     return resp.data.choices[0].message.content;
 
   } catch (error) {
-    console.error("callOpenRouter - Axios isteği başarısız:", error.response ? error.response.data : error.message);
-    const e = new Error('Yapay zeka servisine ulaşılamadı.');
-    e.status = error.response?.status || 500;
+    console.error("callOpenRouter - Axios isteği başarısız:", {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    
+    let errorMessage = 'Yapay zeka servisine ulaşılamadı.';
+    let statusCode = error.response?.status || 500;
+    
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      errorMessage = 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
+      statusCode = 408;
+    } else if (error.response?.status === 401) {
+      errorMessage = 'API anahtarı geçersiz.';
+    } else if (error.response?.status === 429) {
+      errorMessage = 'API limiti aşıldı. Lütfen bekleyin.';
+    } else if (error.response?.status === 500) {
+      errorMessage = 'AI servisi geçici olarak kullanılamıyor.';
+    }
+    
+    const e = new Error(errorMessage);
+    e.status = statusCode;
     throw e;
   }
 }
@@ -250,7 +273,10 @@ Yukarıdaki kullanıcı sorgusuna ve web arama sonuçlarına dayanarak, Türkçe
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.YOUR_SITE_URL || 'http://localhost:5000',
         'X-Title': process.env.YOUR_APP_NAME || 'NotionAI'
-      }
+      },
+      timeout: 60000, // 60 saniye timeout
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
     });
 
     if (!response.data || !response.data.choices || !response.data.choices[0]) {

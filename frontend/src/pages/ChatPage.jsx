@@ -1,6 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { chatHistoryService } from '../services/chatHistoryService';
 
+// JSON yanıtını formatla
+const formatAIResponse = (content) => {
+  try {
+    // JSON olup olmadığını kontrol et
+    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+      const parsed = JSON.parse(content);
+      
+      // Plan formatı
+      if (parsed.plan) {
+        const duration = parsed.plan.duration || parsed.plan.targetDuration || parsed.plan.target_duration;
+        const durationText = duration ? `${duration} gün` : 'Belirtilmedi';
+        
+        return `📚 **${parsed.plan.title}**
+
+📝 **Açıklama:** ${parsed.plan.description}
+
+🎯 **Konu:** ${parsed.plan.subject}
+
+⏱️ **Süre:** ${durationText}
+
+📋 **Kategori:** ${parsed.plan.category || 'Genel'}
+
+${parsed.plan.tasks && parsed.plan.tasks.length > 0 ? `
+🔹 **Görevler:**
+${parsed.plan.tasks.map((task, index) => 
+  `${index + 1}. **Gün ${task.day}:** ${task.title}
+   - ${task.description}
+   - Öncelik: ${task.priority === 'high' ? '🔴 Yüksek' : task.priority === 'medium' ? '🟡 Orta' : '🟢 Düşük'}`
+).join('\n\n')}` : ''}`;
+      }
+      
+      
+      // Genel nesne formatı
+      if (typeof parsed === 'object') {
+        return Object.entries(parsed)
+          .map(([key, value]) => `**${key}:** ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}`)
+          .join('\n\n');
+      }
+    }
+    
+    return content;
+  } catch (error) {
+    // JSON parse edilemezse orijinal içeriği döndür
+    return content;
+  }
+};
+
 function ChatPage() {
   const [chatSessions, setChatSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -181,7 +228,63 @@ function ChatPage() {
                           {message.role === 'user' ? 'Sen' : 'StudyAI'}
                         </div>
                         <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                          {message.content}
+                          {message.content.split('\n').map((line, lineIndex) => {
+                            // Markdown benzeri formatları işle
+                            if (line.startsWith('**') && line.endsWith('**')) {
+                              return (
+                                <div key={lineIndex} className="font-bold mb-2">
+                                  {line.replace(/\*\*/g, '')}
+                                </div>
+                              );
+                            } else if (line.includes('**')) {
+                              // Satır içi bold metinleri işle
+                              const parts = line.split(/(\*\*.*?\*\*)/g);
+                              return (
+                                <div key={lineIndex} className="mb-1">
+                                  {parts.map((part, partIndex) => 
+                                    part.startsWith('**') && part.endsWith('**') ? (
+                                      <span key={partIndex} className="font-semibold">
+                                        {part.replace(/\*\*/g, '')}
+                                      </span>
+                                    ) : (
+                                      <span key={partIndex}>{part}</span>
+                                    )
+                                  )}
+                                </div>
+                              );
+                            } else if (line.match(/^\d+\./)) {
+                              // Numaralı listeler
+                              return (
+                                <div key={lineIndex} className="ml-4 mb-1">
+                                  {line}
+                                </div>
+                              );
+                            } else if (line.startsWith('   - ')) {
+                              // Alt listeler
+                              return (
+                                <div key={lineIndex} className="ml-8 mb-1 text-gray-300">
+                                  {line}
+                                </div>
+                              );
+                            } else if (line.startsWith('🔗 [')) {
+                              // Link formatı
+                              const linkMatch = line.match(/🔗 \[(.*?)\]\((.*?)\)/);
+                              if (linkMatch) {
+                                return (
+                                  <div key={lineIndex} className="mb-1">
+                                    🔗 <a href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                                      {linkMatch[1]}
+                                    </a>
+                                  </div>
+                                );
+                              }
+                            }
+                            return (
+                              <div key={lineIndex} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                                {line}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

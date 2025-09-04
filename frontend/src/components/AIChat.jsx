@@ -3,6 +3,53 @@ import { GlobeIcon, ChevronDownIcon, PaperClipIcon, AtIcon, SendIcon } from './I
 import { sendToAI } from '../api/ai';
 import { chatHistoryService } from '../services/chatHistoryService';
 
+// JSON yanıtını formatla
+const formatAIResponse = (content) => {
+  try {
+    // JSON olup olmadığını kontrol et
+    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+      const parsed = JSON.parse(content);
+      
+      // Plan formatı
+      if (parsed.plan) {
+        const duration = parsed.plan.duration || parsed.plan.targetDuration || parsed.plan.target_duration;
+        const durationText = duration ? `${duration} gün` : 'Belirtilmedi';
+        
+        return `📚 **${parsed.plan.title}**
+
+📝 **Açıklama:** ${parsed.plan.description}
+
+🎯 **Konu:** ${parsed.plan.subject}
+
+⏱️ **Süre:** ${durationText}
+
+📋 **Kategori:** ${parsed.plan.category || 'Genel'}
+
+${parsed.plan.tasks && parsed.plan.tasks.length > 0 ? `
+🔹 **Görevler:**
+${parsed.plan.tasks.map((task, index) => 
+  `${index + 1}. **Gün ${task.day}:** ${task.title}
+   - ${task.description}
+   - Öncelik: ${task.priority === 'high' ? '🔴 Yüksek' : task.priority === 'medium' ? '🟡 Orta' : '🟢 Düşük'}`
+).join('\n\n')}` : ''}`;
+      }
+      
+      
+      // Genel nesne formatı
+      if (typeof parsed === 'object') {
+        return Object.entries(parsed)
+          .map(([key, value]) => `**${key}:** ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}`)
+          .join('\n\n');
+      }
+    }
+    
+    return content;
+  } catch (error) {
+    // JSON parse edilemezse orijinal içeriği döndür
+    return content;
+  }
+};
+
 const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -34,7 +81,12 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
     if (currentSessionId) {
       const session = chatHistoryService.getSession(currentSessionId);
       if (session) {
-        setMessages(session.messages || []);
+        // Mevcut mesajları formatla
+        const formattedMessages = session.messages.map(msg => ({
+          ...msg,
+          content: msg.role === 'assistant' ? formatAIResponse(msg.content) : msg.content
+        }));
+        setMessages(formattedMessages || []);
       }
     } else {
       setMessages([]);
@@ -61,14 +113,15 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
     try {
       let finalContent = "";
       const aiResponse = await sendToAI(newMessages, (text) => {
-        setStreamingText(text);
+        setStreamingText(formatAIResponse(text));
         finalContent = text;
       });
       
       // Streaming tamamlandığında mesajları güncelle
+      const formattedContent = formatAIResponse(aiResponse.answer || finalContent);
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: aiResponse.answer || finalContent,
+        content: formattedContent,
         context: aiResponse.context // Web arama sonuçlarını sakla
       }]);
       setStreamingText("");
@@ -151,7 +204,63 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
                     {message.role === 'user' ? 'Sen' : 'StudyAI'}
                   </div>
                   <div className="whitespace-pre-wrap text-base leading-relaxed">
-                    {message.content}
+                    {message.content.split('\n').map((line, lineIndex) => {
+                      // Markdown benzeri formatları işle
+                      if (line.startsWith('**') && line.endsWith('**')) {
+                        return (
+                          <div key={lineIndex} className="font-bold mb-2">
+                            {line.replace(/\*\*/g, '')}
+                          </div>
+                        );
+                      } else if (line.includes('**')) {
+                        // Satır içi bold metinleri işle
+                        const parts = line.split(/(\*\*.*?\*\*)/g);
+                        return (
+                          <div key={lineIndex} className="mb-1">
+                            {parts.map((part, partIndex) => 
+                              part.startsWith('**') && part.endsWith('**') ? (
+                                <span key={partIndex} className="font-semibold">
+                                  {part.replace(/\*\*/g, '')}
+                                </span>
+                              ) : (
+                                <span key={partIndex}>{part}</span>
+                              )
+                            )}
+                          </div>
+                        );
+                      } else if (line.match(/^\d+\./)) {
+                        // Numaralı listeler
+                        return (
+                          <div key={lineIndex} className="ml-4 mb-1">
+                            {line}
+                          </div>
+                        );
+                      } else if (line.startsWith('   - ')) {
+                        // Alt listeler
+                        return (
+                          <div key={lineIndex} className="ml-8 mb-1 text-gray-300">
+                            {line}
+                          </div>
+                        );
+                      } else if (line.startsWith('🔗 [')) {
+                        // Link formatı
+                        const linkMatch = line.match(/🔗 \[(.*?)\]\((.*?)\)/);
+                        if (linkMatch) {
+                          return (
+                            <div key={lineIndex} className="mb-1">
+                              🔗 <a href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                                {linkMatch[1]}
+                              </a>
+                            </div>
+                          );
+                        }
+                      }
+                      return (
+                        <div key={lineIndex} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                          {line}
+                        </div>
+                      );
+                    })}
                   </div>
                   {message.context && (
                     <div className="mt-4 pt-4 border-t border-gray-700">
@@ -177,7 +286,51 @@ const AIChat = ({ currentSessionId, onSessionSelect, onNewChat }) => {
                 <div className="max-w-[90%] p-4 rounded-lg bg-gray-800 text-gray-100">
                   <div className="text-xs opacity-70 mb-1 font-medium">StudyAI</div>
                   <div className="whitespace-pre-wrap text-base leading-relaxed">
-                    {streamingText}
+                    {formatAIResponse(streamingText).split('\n').map((line, lineIndex) => {
+                      // Markdown benzeri formatları işle
+                      if (line.startsWith('**') && line.endsWith('**')) {
+                        return (
+                          <div key={lineIndex} className="font-bold mb-2">
+                            {line.replace(/\*\*/g, '')}
+                          </div>
+                        );
+                      } else if (line.includes('**')) {
+                        // Satır içi bold metinleri işle
+                        const parts = line.split(/(\*\*.*?\*\*)/g);
+                        return (
+                          <div key={lineIndex} className="mb-1">
+                            {parts.map((part, partIndex) => 
+                              part.startsWith('**') && part.endsWith('**') ? (
+                                <span key={partIndex} className="font-semibold">
+                                  {part.replace(/\*\*/g, '')}
+                                </span>
+                              ) : (
+                                <span key={partIndex}>{part}</span>
+                              )
+                            )}
+                          </div>
+                        );
+                      } else if (line.match(/^\d+\./)) {
+                        // Numaralı listeler
+                        return (
+                          <div key={lineIndex} className="ml-4 mb-1">
+                            {line}
+                          </div>
+                        );
+                      } else if (line.startsWith('   - ')) {
+                        // Alt listeler
+                        return (
+                          <div key={lineIndex} className="ml-8 mb-1 text-gray-300">
+                            {line}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={lineIndex} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                          {line}
+                        </div>
+                      );
+                    })}
                     <span className="inline-block w-1 h-4 ml-1 bg-blue-500 animate-pulse"></span>
                   </div>
                 </div>

@@ -121,20 +121,12 @@ function Sidebar({ currentSessionId, onSessionSelect, onNewChat }) {
   // Görev ve Kaynak sayfalarına geçiş için özel fonksiyonlar
   const handleTasksClick = (e) => {
     e.preventDefault();
-    if (!plans || plans.length === 0) {
-      navigate('/plans');
-    } else {
-      navigate('/tasks');
-    }
+    navigate('/tasks');
   };
 
   const handleResourcesClick = (e) => {
     e.preventDefault();
-    if (!plans || plans.length === 0) {
-      navigate('/plans');
-    } else {
-      navigate('/resources');
-    }
+    navigate('/resources');
   };
 
   const menuItems = [

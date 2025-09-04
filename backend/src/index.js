@@ -22,6 +22,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use('/api/nominatim', nominatimRoutes);
+app.use('/api/map', nominatimRoutes); // Map endpoint'i ekle
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tasks/resources', resourceRoutes);
